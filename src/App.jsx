@@ -1,6 +1,12 @@
 import { Fragment, useEffect, useState } from "react";
 import "./App.css";
 import { ThemeProvider } from "./Context/Theme";
+import { Route, Routes } from "react-router-dom";
+import SHA from "./components/SHA";
+import Navbar from "./components/Navbar.jsx";
+import MITM from "./components/MITM/MITM.jsx";
+import CCS from "./components/CCS.jsx";
+import STT from "./components/STT.jsx";
 
 function App() {
   // Theme controllers
@@ -16,7 +22,14 @@ function App() {
   return (
     <ThemeProvider value={{ darkTheme, lightTheme, themeMode }}>
       <Fragment>
-
+        <Navbar>
+          <Routes>
+            <Route path="/" element={<SHA />} />
+            <Route path="/MITM" element={<MITM />} />
+            <Route path="/CCS" element={<CCS />} />
+            <Route path="/STT" element={<STT />} />
+          </Routes>
+        </Navbar>
       </Fragment>
     </ThemeProvider>
   );

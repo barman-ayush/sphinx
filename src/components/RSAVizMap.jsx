@@ -58,15 +58,15 @@ class RSACalculator {
 		return result;
 	}
 }
-
-const RSAVisualization = () => {
+const RSAVizMap = () => {
 	const canvasRef = useRef(null);
+	const [visualizationType, setVisualizationType] = useState("linear");
 	const [params, setParams] = useState({
 		p: 7,
 		q: 11,
 		e: 17,
 		messageStart: 0,
-		messageEnd: 100,
+		messageEnd: 20,
 	});
 
 	const [calculator, setCalculator] = useState(
@@ -75,139 +75,159 @@ const RSAVisualization = () => {
 	const [currentStep, setCurrentStep] = useState(0);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [speed, setSpeed] = useState(50);
-	const [fixPoints, setFixPoints] = useState([]);
 	const [connections, setConnections] = useState([]);
+	const generateConnections = useCallback(() => {
+		const newConnections = [];
+		const numPoints = params.messageEnd - params.messageStart + 1;
 
-	const findEncryptedIndex = useCallback((encrypted, points) => {
-		const idx = points.findIndex(
-			(fp) => fp.type === "ciphertext" && fp.value === encrypted
-		);
-		return Math.floor(idx / 2);
-	}, []);
+		for (let i = params.messageStart; i <= params.messageEnd; i++) {
+			const encrypted = calculator.encrypt(i);
+			newConnections.push({
+				plaintext: i,
+				ciphertext: encrypted,
+				isSelfMapping: i === encrypted,
+			});
+		}
 
-	const generateConnections = useCallback(
-		(points) => {
-			const newConnections = [];
-			const numPoints = params.messageEnd - params.messageStart + 1;
+		setConnections(newConnections);
+	}, [calculator, params.messageEnd, params.messageStart]);
 
-			for (let i = 0; i < numPoints; i++) {
-				const plaintext = params.messageStart + i;
-				const encrypted = calculator.encrypt(plaintext);
-
-				const startIdx = i;
-				const endIdx = findEncryptedIndex(encrypted, points);
-
-				if (endIdx !== -1) {
-					newConnections.push({
-						startIdx: startIdx,
-						endIdx: endIdx,
-						plaintext: plaintext,
-						ciphertext: encrypted,
-						isSelfMapping: plaintext === encrypted,
-					});
-				}
-			}
-
-			newConnections.sort((a, b) => (a.isSelfMapping ? 1 : -1));
-			setConnections(newConnections);
-		},
-		[calculator, params.messageEnd, params.messageStart, findEncryptedIndex]
-	);
-
-	const initialize = useCallback(() => {
+	const drawLinear = useCallback(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		const spacing =
 			canvas.width / (params.messageEnd - params.messageStart + 2);
 		const topY = 80;
 		const bottomY = canvas.height - 80;
 
-		const newFixPoints = [];
-
-		for (let i = params.messageStart; i <= params.messageEnd; i++) {
-			const x = spacing * (i - params.messageStart + 1);
-			newFixPoints.push({
-				point: new Point(x, topY),
-				value: i,
-				type: "plaintext",
-			});
-			const encrypted = calculator.encrypt(i);
-			newFixPoints.push({
-				point: new Point(x, bottomY),
-				value: encrypted,
-				type: "ciphertext",
-			});
-		}
-
-		setFixPoints(newFixPoints);
-		generateConnections(newFixPoints);
-	}, [params.messageEnd, params.messageStart, calculator, generateConnections]);
-
-	const draw = useCallback(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
-
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-
 		// Draw grid lines
 		ctx.strokeStyle = "#f0f0f0";
 		ctx.lineWidth = 1;
-		fixPoints.forEach(({ point }) => {
+		for (let i = params.messageStart; i <= params.messageEnd; i++) {
+			const x = spacing * (i - params.messageStart + 1);
 			ctx.beginPath();
-			ctx.moveTo(point.x, 0);
-			ctx.lineTo(point.x, canvas.height);
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x, canvas.height);
 			ctx.stroke();
-		});
+		}
+
+		// Draw points and numbers
+		for (let i = params.messageStart; i <= params.messageEnd; i++) {
+			const x = spacing * (i - params.messageStart + 1);
+
+			// Draw points
+			ctx.fillStyle = "red";
+			ctx.beginPath();
+			ctx.arc(x, topY, 4, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.beginPath();
+			ctx.arc(x, bottomY, 4, 0, Math.PI * 2);
+			ctx.fill();
+
+			// Draw labels
+			ctx.fillStyle = "black";
+			ctx.font = "14px Arial";
+			ctx.textAlign = "center";
+			ctx.fillText(i.toString(), x, topY - 15);
+			ctx.fillText(i.toString(), x, bottomY + 20);
+		}
 
 		// Draw connections
 		connections.slice(0, currentStep).forEach((conn) => {
-			const start = fixPoints[conn.startIdx].point;
-			const end = fixPoints[conn.endIdx * 2 + 1].point;
+			const startX = spacing * (conn.plaintext - params.messageStart + 1);
+			const endX = spacing * (conn.ciphertext - params.messageStart + 1);
 
 			ctx.strokeStyle = conn.isSelfMapping ? "red" : "green";
 			ctx.lineWidth = conn.isSelfMapping ? 2 : 1;
 
 			ctx.beginPath();
-			ctx.moveTo(start.x, start.y);
-			ctx.lineTo(end.x, end.y);
+			ctx.moveTo(startX, topY);
+			ctx.lineTo(endX, bottomY);
 			ctx.stroke();
 		});
+	}, [connections, currentStep, params]);
+
+	const drawElliptical = useCallback(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		const centerX = canvas.width / 2;
+		const centerY = canvas.height / 2;
+		const radius = Math.min(canvas.width, canvas.height) * 0.4;
+		const numPoints = params.messageEnd - params.messageStart + 1;
+
+		// Draw circle guide
+		ctx.strokeStyle = "#f0f0f0";
+		ctx.beginPath();
+		ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+		ctx.stroke();
 
 		// Draw points and numbers
-		fixPoints.forEach(({ point, value, type }) => {
-			ctx.strokeStyle = "red";
+		for (let i = 0; i < numPoints; i++) {
+			const angle = (i * 2 * Math.PI) / numPoints;
+			const x = centerX + radius * Math.cos(angle);
+			const y = centerY + radius * Math.sin(angle);
+
 			ctx.fillStyle = "red";
 			ctx.beginPath();
-			ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+			ctx.arc(x, y, 4, 0, Math.PI * 2);
 			ctx.fill();
-			ctx.stroke();
 
 			ctx.fillStyle = "black";
 			ctx.font = "14px Arial";
 			ctx.textAlign = "center";
 			ctx.fillText(
-				value.toString(),
-				point.x,
-				point.y + (type === "plaintext" ? -15 : 20)
+				(i + params.messageStart).toString(),
+				x + 15 * Math.cos(angle),
+				y + 15 * Math.sin(angle)
 			);
-		});
-	}, [connections, currentStep, fixPoints]);
+		}
 
+		// Draw connections
+		connections.slice(0, currentStep).forEach((conn) => {
+			const startAngle =
+				((conn.plaintext - params.messageStart) * 2 * Math.PI) / numPoints;
+			const endAngle =
+				((conn.ciphertext - params.messageStart) * 2 * Math.PI) / numPoints;
+
+			const startX = centerX + radius * Math.cos(startAngle);
+			const startY = centerY + radius * Math.sin(startAngle);
+			const endX = centerX + radius * Math.cos(endAngle);
+			const endY = centerY + radius * Math.sin(endAngle);
+
+			ctx.strokeStyle = conn.isSelfMapping ? "red" : "green";
+			ctx.lineWidth = conn.isSelfMapping ? 2 : 1;
+
+			ctx.beginPath();
+			ctx.moveTo(startX, startY);
+			ctx.lineTo(endX, endY);
+			ctx.stroke();
+		});
+	}, [connections, currentStep, params]);
 	useEffect(() => {
 		if (canvasRef.current) {
 			canvasRef.current.width = 1200;
 			canvasRef.current.height = 600;
-			initialize();
+			generateConnections();
 		}
-	}, [initialize]);
+	}, [generateConnections]);
 
 	useEffect(() => {
-		draw();
-	}, [draw]);
+		if (visualizationType === "linear") {
+			drawLinear();
+		} else {
+			drawElliptical();
+		}
+	}, [drawLinear, drawElliptical, visualizationType]);
 
 	useEffect(() => {
 		let interval;
@@ -224,157 +244,199 @@ const RSAVisualization = () => {
 		}
 		return () => clearInterval(interval);
 	}, [isPlaying, speed, connections.length]);
-
-	const updateParameters = useCallback(() => {
-		const newCalculator = new RSACalculator(params.p, params.q, params.e);
-		setCalculator(newCalculator);
-		setCurrentStep(0);
-	}, [params]);
-
 	return (
-		<div className="flex gap-5 p-5 bg-white rounded-lg shadow-sm">
-			<div className="flex-grow">
-				<canvas
-					ref={canvasRef}
-					className="border border-gray-200 rounded-md bg-white w-full"
-				/>
-				<div className="flex items-center gap-4 mt-4 p-3 bg-gray-50 rounded-md">
-					<button
-						onClick={() => setIsPlaying(!isPlaying)}
-						className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-					>
-						{isPlaying ? "Pause" : "Continue"}
-					</button>
-					<input
-						type="range"
-						min="1"
-						max="100"
-						value={speed}
-						onChange={(e) => setSpeed(parseInt(e.target.value))}
-						className="w-40"
-					/>
-					<button
-						onClick={() =>
-							setCurrentStep((prev) => Math.min(prev + 1, connections.length))
-						}
-						className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-					>
-						Next step
-					</button>
-					<button
-						onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-						className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-					>
-						Previous step
-					</button>
-					<button
-						onClick={() => setCurrentStep(0)}
-						className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-					>
-						Reset
-					</button>
-				</div>
-				<div className="mt-5 p-4 bg-white border border-gray-200 rounded-md h-72 overflow-y-auto font-mono text-sm">
-					{Array.from(
-						{ length: params.messageEnd - params.messageStart + 1 },
-						(_, i) => {
-							const value = params.messageStart + i;
-							return (
-								<div key={i}>
-									{value}^{calculator.e} mod {calculator.n} ={" "}
-									{calculator.encrypt(value)}
-								</div>
-							);
-						}
-					)}
+		<div className="flex flex-col gap-5 p-5 bg-white rounded-lg shadow-sm">
+			<div className="flex gap-4 items-center">
+				<button
+					onClick={() =>
+						setVisualizationType((v) =>
+							v === "linear" ? "elliptical" : "linear"
+						)
+					}
+					className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"
+				>
+					View: {visualizationType === "linear" ? "Linear" : "Elliptical"}
+				</button>
+				<div className="text-sm text-gray-600">
+					{currentStep} / {connections.length} steps
 				</div>
 			</div>
-			<div className="w-64 bg-gray-50 p-5 rounded-lg">
-				<h3 className="text-lg font-semibold mb-4">RSA Parameters</h3>
-				<div className="space-y-4">
-					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							p (prime):
-						</label>
-						<input
-							type="number"
-							value={params.p}
-							onChange={(e) =>
-								setParams((prev) => ({ ...prev, p: parseInt(e.target.value) }))
-							}
-							className="w-24 px-3 py-2 border border-gray-300 rounded-md"
-						/>
-					</div>
-					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							q (prime):
-						</label>
-						<input
-							type="number"
-							value={params.q}
-							onChange={(e) =>
-								setParams((prev) => ({ ...prev, q: parseInt(e.target.value) }))
-							}
-							className="w-24 px-3 py-2 border border-gray-300 rounded-md"
-						/>
-					</div>
-					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							e (public exponent):
-						</label>
-						<input
-							type="number"
-							value={params.e}
-							onChange={(e) =>
-								setParams((prev) => ({ ...prev, e: parseInt(e.target.value) }))
-							}
-							className="w-24 px-3 py-2 border border-gray-300 rounded-md"
-						/>
-					</div>
-					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							Message range:
-						</label>
-						<div className="flex gap-2">
+
+			<div className="flex gap-5">
+				<div className="flex-grow">
+					<canvas
+						ref={canvasRef}
+						className="border border-gray-200 rounded-md bg-white w-full"
+					/>
+
+					{/* Controls */}
+					<div className="flex items-center gap-4 mt-4 p-3 bg-gray-50 rounded-md">
+						<button
+							onClick={() => setIsPlaying(!isPlaying)}
+							className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+						>
+							{isPlaying ? "Pause" : "Play"}
+						</button>
+
+						<div className="flex items-center gap-2">
+							<span className="text-sm text-gray-600">Speed:</span>
 							<input
-								type="number"
-								value={params.messageStart}
-								onChange={(e) =>
-									setParams((prev) => ({
-										...prev,
-										messageStart: parseInt(e.target.value),
-									}))
-								}
-								className="w-20 px-3 py-2 border border-gray-300 rounded-md"
-							/>
-							<input
-								type="number"
-								value={params.messageEnd}
-								onChange={(e) =>
-									setParams((prev) => ({
-										...prev,
-										messageEnd: parseInt(e.target.value),
-									}))
-								}
-								className="w-20 px-3 py-2 border border-gray-300 rounded-md"
+								type="range"
+								min="1"
+								max="100"
+								value={speed}
+								onChange={(e) => setSpeed(parseInt(e.target.value))}
+								className="w-32"
 							/>
 						</div>
+
+						<button
+							onClick={() =>
+								setCurrentStep((prev) => Math.min(prev + 1, connections.length))
+							}
+							className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+						>
+							Next
+						</button>
+
+						<button
+							onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
+							className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+						>
+							Previous
+						</button>
+
+						<button
+							onClick={() => setCurrentStep(0)}
+							className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+						>
+							Reset
+						</button>
 					</div>
-					<button
-						onClick={updateParameters}
-						className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors mt-4"
-					>
-						Update Parameters
-					</button>
-					<div className="mt-5 p-4 bg-white border border-gray-200 rounded-md">
-						<p>n = {calculator.n}</p>
-						<p>φ(n) = {calculator.phi}</p>
-						<p>d = {calculator.d}</p>
+
+					{/* Encryption Results */}
+					<div className="mt-5 p-4 bg-white border border-gray-200 rounded-md h-72 overflow-y-auto">
+						<div className="grid grid-cols-2 gap-4">
+							{connections.map((conn, idx) => (
+								<div
+									key={idx}
+									className={`p-2 rounded ${
+										idx < currentStep ? "bg-green-50" : "bg-gray-50"
+									}`}
+								>
+									{conn.plaintext} → {conn.ciphertext}
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+
+				{/* Parameters Panel */}
+				<div className="w-64 bg-gray-50 p-5 rounded-lg">
+					<h3 className="text-lg font-semibold mb-4">RSA Parameters</h3>
+					<div className="space-y-4">
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">
+								p (prime):
+							</label>
+							<input
+								type="number"
+								value={params.p}
+								onChange={(e) =>
+									setParams((prev) => ({
+										...prev,
+										p: parseInt(e.target.value),
+									}))
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md"
+							/>
+						</div>
+
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">
+								q (prime):
+							</label>
+							<input
+								type="number"
+								value={params.q}
+								onChange={(e) =>
+									setParams((prev) => ({
+										...prev,
+										q: parseInt(e.target.value),
+									}))
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md"
+							/>
+						</div>
+
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">
+								e (public exponent):
+							</label>
+							<input
+								type="number"
+								value={params.e}
+								onChange={(e) =>
+									setParams((prev) => ({
+										...prev,
+										e: parseInt(e.target.value),
+									}))
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md"
+							/>
+						</div>
+
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">
+								Message range:
+							</label>
+							<div className="flex gap-2">
+								<input
+									type="number"
+									value={params.messageStart}
+									onChange={(e) =>
+										setParams((prev) => ({
+											...prev,
+											messageStart: parseInt(e.target.value),
+										}))
+									}
+									className="w-24 px-3 py-2 border border-gray-300 rounded-md"
+								/>
+								<input
+									type="number"
+									value={params.messageEnd}
+									onChange={(e) =>
+										setParams((prev) => ({
+											...prev,
+											messageEnd: parseInt(e.target.value),
+										}))
+									}
+									className="w-24 px-3 py-2 border border-gray-300 rounded-md"
+								/>
+							</div>
+						</div>
+
+						<button
+							onClick={() => {
+								setCalculator(new RSACalculator(params.p, params.q, params.e));
+								setCurrentStep(0);
+								generateConnections();
+							}}
+							className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+						>
+							Update Parameters
+						</button>
+
+						{/* RSA Info */}
+						<div className="mt-4 p-3 bg-white border border-gray-200 rounded-md">
+							<p className="text-sm">n = {calculator.n}</p>
+							<p className="text-sm">φ(n) = {calculator.phi}</p>
+							<p className="text-sm">d = {calculator.d}</p>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	);
 };
-
-export default RSAVisualization;
+export default RSAVizMap;

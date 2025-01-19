@@ -61,7 +61,7 @@ function RSAVisualizer() {
 			description: "Calculating n = p * q",
 			component: () => (
 				<div className="calculation-step">
-					<p>
+					<p className="text-white">
 						n = {p} * {q} = {p * q}
 					</p>
 				</div>
@@ -73,11 +73,11 @@ function RSAVisualizer() {
 		},
 		{
 			title: "Calculate Euler's Totient (φ)",
-			description: "Calculating φ = (p-1) * (q-1)",
+			description: "Calculating φ(n) = (p-1) * (q-1)",
 			component: () => (
 				<div className="calculation-step">
-					<p>
-						φ = ({p}-1) * ({q}-1) = {(p - 1) * (q - 1)}
+					<p className="text-white">
+						φ(n) = ({p}-1) * ({q}-1) = {(p - 1) * (q - 1)}
 					</p>
 				</div>
 			),
@@ -88,7 +88,7 @@ function RSAVisualizer() {
 		},
 		{
 			title: "Select Public Key (e)",
-			description: "Choose a coprime to φ",
+			description: "Choose a coprime to φ(n)",
 			component: () => (
 				<div className="input-step">
 					<input
@@ -150,7 +150,7 @@ function RSAVisualizer() {
 					message
 				);
 				return (
-					<div className="encryption-step">
+					<div className="encryption-step text-white">
 						<p>Original Message: {message}</p>
 						<p>Encrypted Message (Hex): {encryptedHex}</p>
 					</div>
@@ -177,7 +177,7 @@ function RSAVisualizer() {
 					encryptedHex
 				);
 				return (
-					<div className="decryption-step">
+					<div className="decryption-step text-white">
 						<p>Encrypted Message (Hex): {encryptedHex}</p>
 						<p>Decrypted Message: {decryptedMessage}</p>
 					</div>

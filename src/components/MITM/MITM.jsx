@@ -348,7 +348,7 @@ const MITM = () => {
 				<button onClick={reset}>Reset</button>
 			</div>
 
-			<div className="result" id="result"></div>
+			<div className="result bg-gray-900" id="result"></div>
 		</div>
 	);
 };

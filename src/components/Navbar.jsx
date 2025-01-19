@@ -19,9 +19,9 @@ const Navbar = ({ children }) => {
 				>
 					<div
 						onClick={() => navigate("/")}
-						class="h-10 w-10 flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white"
+						class="p-1 text-xs md:text-sm flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white text-center"
 					>
-						<div className="text-cont">SHA256</div>
+						SHA256
 						{/* <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-6 w-6"
@@ -38,9 +38,9 @@ const Navbar = ({ children }) => {
 
 					<div
 						onClick={() => navigate("/MITM")}
-						class="h-10 w-10 flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white"
+						class="p-1 text-xs md:text-sm flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white text-center"
 					>
-						<div className="text-cont">MITM</div>
+						MITM
 						{/* <svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-6 w-6"
@@ -60,9 +60,9 @@ const Navbar = ({ children }) => {
 
 					<div
 						onClick={() => navigate("/CCS")}
-						class="h-10 w-10 flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white"
+						class="p-1 text-xs md:text-sm flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white text-center"
 					>
-						<div className="text-cont text-center">Vulnerability Scanner</div>
+						Vulnerability Scanner
 						{/* <svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-6 w-6"
@@ -81,9 +81,9 @@ const Navbar = ({ children }) => {
 
 					<div
 						onClick={() => navigate("/STT")}
-						class="h-10 w-10 flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white"
+						class="p-1 text-xs md:text-sm flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white text-center"
 					>
-						<div className="text-cont text-center">JWT Scanner</div>
+						JWT Scanner
 						{/* <svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-6 w-6"
@@ -108,9 +108,9 @@ const Navbar = ({ children }) => {
 
 					<div
 						onClick={() => navigate("/RSA")}
-						class="h-10 w-10 flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white"
+						class="p-1 text-xs md:text-sm flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white text-center"
 					>
-						<div className="text-cont text-center">RSA Visualizer</div>
+						RSA Visualizer
 						{/* <svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-6 w-6"
@@ -135,9 +135,9 @@ const Navbar = ({ children }) => {
 
 					<div
 						onClick={() => navigate("/RSA-VIZ")}
-						class="h-10 w-10 flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white"
+						class="p-1 text-xs md:text-sm flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white text-center"
 					>
-						<div className="text-cont text-center">RSA Graph</div>
+						RSA Graph
 						{/* <svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-6 w-6"
@@ -162,9 +162,9 @@ const Navbar = ({ children }) => {
 
 					<div
 						onClick={() => navigate("/CTF")}
-						class="h-10 w-10 flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white"
+						class="p-1 text-xs md:text-sm flex items-center justify-center rounded-lg cursor-pointer hover:text-gray-800 hover:bg-white  hover:duration-300 hover:ease-linear focus:bg-white text-center"
 					>
-						<div className="text-cont text-center">CTF</div>
+						CTF
 						{/* <svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-6 w-6"

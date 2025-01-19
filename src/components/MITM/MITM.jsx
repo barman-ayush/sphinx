@@ -286,7 +286,7 @@ const MITM = () => {
         </div>
       </div>
 
-      <div className="animation-container">
+      <div className="animation-container bg-slate-700">
         <div className="path-line"></div>
         <div className="participant alice">Alice</div>
         <div className="participant mallory">Mallory</div>

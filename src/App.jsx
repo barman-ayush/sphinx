@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar.jsx";
 import MITM from "./components/MITM/MITM.jsx";
 import CCS from "./components/CCS.jsx";
 import STT from "./components/STT.jsx";
+import CTF from "./components/CTF.jsx";
 
 function App() {
   // Theme controllers
@@ -28,6 +29,7 @@ function App() {
             <Route path="/MITM" element={<MITM />} />
             <Route path="/CCS" element={<CCS />} />
             <Route path="/STT" element={<STT />} />
+            <Route path="/CTF" element={<CTF />} />
           </Routes>
         </Navbar>
       </Fragment>
